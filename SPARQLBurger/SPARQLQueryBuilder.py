@@ -12,15 +12,21 @@ from SPARQLBurger.SPARQLSyntaxTerms import *
 
 
 class SPARQLGraphPattern:
-    def __init__(self, optional=False, union=False):
+    def __init__(self, optional=False, union=False, graph_name=None, graph_keyword='GRAPH'):
         """
         The SPARQLGraphPattern class constructor.
         :param optional: <bool> Indicates if graph pattern should be marked as OPTIONAL.
         :param union: <bool> Indicates if graph pattern should have a UNION clause that associates it with the previous.
         graph pattern
         """
+        if graph_name:
+            assert not optional
+            assert not union
+
         self.is_optional = optional
         self.is_union = union
+        self.graph_name = graph_name
+        self.graph_keyword = graph_keyword
         self.graph = []
         self.filters = []
         self.bindings = []
@@ -101,6 +107,8 @@ class SPARQLGraphPattern:
                 query_text = "%sOPTIONAL {\n" % (outer_indentation, )
             elif self.is_union:
                 query_text = "%sUNION\n%s{\n" % (outer_indentation, outer_indentation)
+            elif self.graph_name:
+                query_text = "%s{ %s %s {\n" % (outer_indentation, self.graph_keyword, self.graph_name)
             else:
                 query_text = "%s{\n" % (outer_indentation, )
 
@@ -143,7 +151,10 @@ class SPARQLGraphPattern:
                 query_text += "%s%s\n" % (inner_indentation, filter.get_text())
 
             # Finalize graph text
-            query_text += "%s}\n" % (outer_indentation, )
+            if self.graph_name:
+                query_text += "%s} }\n" % (outer_indentation, )
+            else:
+                query_text += "%s}\n" % (outer_indentation, )
 
             return query_text
 
@@ -166,7 +177,7 @@ class SPARQLQuery:
 
     def add_prefix(self, prefix):
         """
-        Adds a PREFIX expression to the query.
+        Adds a PREFIX expression to the graph pattern.
         :param prefix: <obj> The Prefix object to be added.
         :return: <bool> True if addition succeeded, False if given argument was not a Prefix object.
         """
