@@ -12,7 +12,7 @@ from SPARQLBurger.SPARQLSyntaxTerms import *
 
 
 class SPARQLGraphPattern:
-    def __init__(self, optional=False, union=False, graph_name=None, graph_keyword='GRAPH'):
+    def __init__(self, optional=False, union=False, keyword=False, graph_name=None, graph_keyword='GRAPH'):
         """
         The SPARQLGraphPattern class constructor.
         :param optional: <bool> Indicates if graph pattern should be marked as OPTIONAL.
@@ -22,10 +22,12 @@ class SPARQLGraphPattern:
         if graph_name:
             assert not optional
             assert not union
+            assert not keyword
 
         self.is_optional = optional
         self.is_union = union
         self.graph_name = graph_name
+        self.keyword = keyword
         self.graph_keyword = graph_keyword
         self.graph = []
         self.filters = []
@@ -107,6 +109,8 @@ class SPARQLGraphPattern:
                 query_text = "%sOPTIONAL {\n" % (outer_indentation, )
             elif self.is_union:
                 query_text = "%sUNION\n%s{\n" % (outer_indentation, outer_indentation)
+            elif self.keyword:
+                query_text = "%s%s {\n" % (outer_indentation, self.keyword)
             elif self.graph_name:
                 query_text = "%s{ %s %s {\n" % (outer_indentation, self.graph_keyword, self.graph_name)
             else:
